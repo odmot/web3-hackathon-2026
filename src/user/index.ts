@@ -1,4 +1,4 @@
-import type { Agent, Permission, Owner } from "../core/types.js";
+import type { Agent, Permission, Owner } from "../core/types";
 
 /**
  * Return the list of permissions available on this website.

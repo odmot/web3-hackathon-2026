@@ -1,5 +1,5 @@
-import type { Agent, Permission } from "../core/types.js";
-import {fakeBlockchain} from "../core/blockchain.js";
+import type { Agent, Permission } from "../core/types";
+import {fakeBlockchain} from "../core/blockchain";
 
 /**
  * Authenticate an AI agent against the blockchain.

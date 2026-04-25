@@ -1,4 +1,4 @@
-import type { Agent, Permission, Owner } from "../core/types.js";
+import type { Agent, Permission, Owner } from "../core/types";
 
 interface FakeBlockchain {
   owner: Owner,
