@@ -14,6 +14,14 @@ describe("agent", () => {
   it("checkAgentPermission runs without throwing", () => {
     expect(() => checkAgentPermission("agent-001", "read:data")).not.toThrow();
   });
+
+  it("checkAgentPermission test owner 1 has test perm2", () => {
+    expect(checkAgentPermission("test owner 1", "test perm2")).toBeTruthy();
+  });
+
+  it("checkAgentPermission test owner 1 doesn't have test perm3", () => {
+    expect(checkAgentPermission("test owner 1", "test perm3")).toBeFalsy();
+  });
 });
 
 describe("user", () => {
