@@ -1,4 +1,5 @@
 import type { Agent, Permission, Owner } from "../core/types";
+import {fakeBlockchain} from "../core/blockchain";
 
 /**
  * Return the list of permissions available on this website.
@@ -11,12 +12,12 @@ export function getWebsitePermissions(): Permission[] {
 /**
  * Set what permissions an AI agent has, on behalf of an owner.
  */
-export function setAIPermissions(
+export function setAIPermissions( //adds somethin to the blockchain
   agent: Agent,
-  perm: Permission,
+  perms: Permission[],
   owner: Owner
 ): void {
-  console.log("setAIPermissions", { agent, perm, owner });
+  fakeBlockchain.push({ owner: owner, agent: agent, permissions: perms })
 }
 
 /**
