@@ -5,6 +5,7 @@ import {
   setAIPermissions,
   userAuthenticate,
 } from "../src/index.js";
+import {fakeBlockchain} from "../src/core/blockchain";
 
 describe("agent", () => {
   it("agentAuthenticate runs without throwing", () => {
@@ -37,5 +38,10 @@ describe("user", () => {
 
   it("userAuthenticate runs without throwing", () => {
     expect(() => userAuthenticate("alice")).not.toThrow();
+  });
+
+  it("fakeBlockchain works", () => {
+    setAIPermissions("agent67", ["permission6", "permission7"], "owner6767")
+    expect(fakeBlockchain.at(-1)).toStrictEqual({ owner: "owner6767", agent: "agent67", permissions: ["permission6", "permission7"] });
   });
 });
