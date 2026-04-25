@@ -12,7 +12,7 @@ describe("agent", () => {
   });
 
   it("checkAgentPermission runs without throwing", () => {
-    expect(() => checkAgentPermission("read:data")).not.toThrow();
+    expect(() => checkAgentPermission("agent-001", "read:data")).not.toThrow();
   });
 });
 
