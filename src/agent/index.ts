@@ -10,6 +10,6 @@ export function agentAuthenticate(agent: Agent): void {
 /**
  * Check if the authenticated AI agent has a given permission.
  */
-export function checkAgentPermission(perm: Permission): void {
-  console.log("checkAgentPermission", { perm });
+export function checkAgentPermission(agent: Agent, perm: Permission): void {
+  console.log("checkAgentPermission", { agent, perm });
 }
