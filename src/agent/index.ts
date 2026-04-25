@@ -17,7 +17,7 @@ export function agentAuthenticate(agent: Agent): boolean {
  */
 export function checkAgentPermission(agent: Agent, perm: Permission): boolean {
   for (var entry of fakeBlockchain) {
-    if (perm in entry.permissions && entry.agent == agent) {
+    if (entry.permissions.includes(perm) && entry.agent == agent) {
       return true;
     }
   } return false;

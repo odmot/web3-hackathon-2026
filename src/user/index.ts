@@ -5,7 +5,7 @@ import type { Agent, Permission, Owner } from "../core/types";
  */
 export function getWebsitePermissions(): Permission[] {
   console.log("getWebsitePermissions");
-  return [];
+  return ["test perm1", "test perm2", "test perm3", "test perm4", "test perm5"];
 }
 
 /**

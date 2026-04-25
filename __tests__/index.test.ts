@@ -16,11 +16,11 @@ describe("agent", () => {
   });
 
   it("checkAgentPermission test owner 1 has test perm2", () => {
-    expect(checkAgentPermission("test owner 1", "test perm2")).toBeTruthy();
+    expect(checkAgentPermission("test agent1", "test perm2")).toBeTruthy();
   });
 
   it("checkAgentPermission test owner 1 doesn't have test perm3", () => {
-    expect(checkAgentPermission("test owner 1", "test perm3")).toBeFalsy();
+    expect(checkAgentPermission("test agent1", "test perm3")).toBeFalsy();
   });
 });
 
