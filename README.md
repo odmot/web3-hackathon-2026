@@ -8,6 +8,12 @@ Blockchain-based AI agent authentication and permission management library.
 npm install uoaweb3-2026-team5
 ```
 
+## Run Contrast Test
+
+```bash
+npm run test-contract  
+```
+
 ## API
 
 ### Agent Library
