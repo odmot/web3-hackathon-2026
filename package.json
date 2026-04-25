@@ -12,7 +12,6 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "jest --coverage --coverageReporters='text-summary' --silent",
-    "test:contract": "node scripts/test-agent-gateway.cjs",
     "lint": "eslint src/**/*.ts",
     "prepublishOnly": "npm run build",
     "test-contract": "ts-node src/test/test-connection.ts"
