@@ -12,8 +12,10 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "jest --coverage --coverageReporters='text-summary' --silent",
+    "test:contract": "node scripts/test-agent-gateway.cjs",
     "lint": "eslint src/**/*.ts",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test-contract": "ts-node src/test/test-connection.ts"
   },
   "keywords": [
     "blockchain",
@@ -29,9 +31,16 @@
     "@types/jest": "^29.5.14",
     "@types/node": "^22.0.0",
     "eslint": "^9.0.0",
+    "ethers": "^6.16.0",
+    "ganache": "^7.9.2",
     "jest": "^29.7.0",
+    "solc": "^0.8.34",
     "ts-jest": "^29.2.5",
-    "typescript": "^5.4.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
     "typescript-eslint": "^8.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2"
   }
 }
