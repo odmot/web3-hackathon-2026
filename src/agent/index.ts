@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import * as fs from "fs";
-import axios from "axios";
+// import axios from "axios";
 
 export class AgentClient {
   /**
@@ -8,22 +8,22 @@ export class AgentClient {
    * AI 调用此方法去“查阅”目标网站目前需要哪些权限。
    * 这模拟了 AI 发现网站最新“权限清单”的过程。
    */
-  static async getSiteRequirements(domain: string) {
-    console.log(`🔍 AI is fetching permission manifest for: ${domain}`);
-    try {
-      // 在实际黑客松中，这里可以请求 Joshua 的一个公开端点，或者直接查询智能合约
-      // 演示时，我们假设网站有一个 /.well-known/ai-permissions.json
-      const response = await axios.get(`http://localhost:3001/manifest?domain=${domain}`);
-      return response.data; // 返回格式示例: { requiredScopes: ["READ", "PURCHASE"], contractAddress: "0x..." }
-    } catch (error) {
-      // 如果网站还没对接，返回默认值
-      return {
-        domain,
-        requiredScopes: ["BASIC_ACCESS"],
-        message: "Standard protocol access required."
-      };
-    }
-  }
+  // static async getSiteRequirements(domain: string) {
+  //   console.log(`🔍 AI is fetching permission manifest for: ${domain}`);
+  //   try {
+  //     // 在实际黑客松中，这里可以请求 Joshua 的一个公开端点，或者直接查询智能合约
+  //     // 演示时，我们假设网站有一个 /.well-known/ai-permissions.json
+  //     const response = await axios.get(`http://localhost:3001/manifest?domain=${domain}`);
+  //     return response.data; // 返回格式示例: { requiredScopes: ["READ", "PURCHASE"], contractAddress: "0x..." }
+  //   } catch (error) {
+  //     // 如果网站还没对接，返回默认值
+  //     return {
+  //       domain,
+  //       requiredScopes: ["BASIC_ACCESS"],
+  //       message: "Standard protocol access required."
+  //     };
+  //   }
+  // }
 
   /** Generate identity and save to local JSON */
   static createIdentity(customPath?: string) {
