@@ -1,6 +1,9 @@
 {
   "name": "uoaweb3-2026-team5",
   "version": "0.1.0",
+  "bin": {
+    "agent-gen": "./dist/cli/init-agent.ts"
+  },
   "description": "Blockchain-based AI agent authentication and permission management library.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,7 +17,8 @@
     "test": "jest --coverage --coverageReporters='text-summary' --silent",
     "lint": "eslint src/**/*.ts",
     "prepublishOnly": "npm run build",
-    "test-contract": "ts-node src/test/test-connection.ts"
+    "act": "ts-node src/test/agent-request.ts",
+    "gen": "ts-node src/test/init-agent.ts"
   },
   "keywords": [
     "blockchain",

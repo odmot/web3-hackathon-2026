@@ -1,28 +1,34 @@
-import type { Agent, Permission, Owner } from "../core/types";
-import {fakeBlockchain} from "../core/blockchain";
+import { ethers } from "ethers";
 
 /**
- * Return the list of permissions available on this website.
+ * MODULE 1: DApp - Owner Management Tools
+ * Used by the human owner to interact with the contract.
  */
-export function getWebsitePermissions(): Permission[] {
-  console.log("getWebsitePermissions");
-  return ["test perm1", "test perm2", "test perm3", "test perm4", "test perm5"];
-}
+export class OwnerClient {
+  // The contract instance should be connected to a Signer (User's Wallet)
+  constructor(private contract: ethers.Contract) {}
 
-/**
- * Set what permissions an AI agent has, on behalf of an owner.
- */
-export function setAIPermissions( //adds somethin to the blockchain
-  agent: Agent,
-  perms: Permission[],
-  owner: Owner
-): void {
-  fakeBlockchain.push({ owner: owner, agent: agent, permissions: perms })
-}
+  /** * Register a new agent on Avalanche (requires 0.01 AVAX deposit) 
+   */
+  async registerAgent(agentAddress: string) {
+    const tx = await this.contract.registerAgent(agentAddress, { 
+      value: ethers.parseEther("0.01") 
+    });
+    return await tx.wait();
+  }
 
-/**
- * Authenticate a user (login).
- */
-export function userAuthenticate(user: string): void {
-  console.log("userAuthenticate", { user });
+  /** * Grant specific domain/scope permissions to an agent 
+   */
+  async grantPermission(agentAddress: string, domain: string, scope: string) {
+    const tx = await this.contract.grantPermission(agentAddress, domain, scope);
+    return await tx.wait();
+  }
+
+  /** * Deregister an agent: Revokes all permissions and gets the 0.01 AVAX deposit back.
+   * This is the "Retirement" phase of the AI Agent.
+   */
+  async deregisterAgent(agentAddress: string) {
+    const tx = await this.contract.deregisterAgent(agentAddress);
+    return await tx.wait();
+  }
 }

@@ -1,75 +1,90 @@
 import { ethers } from "ethers";
 import * as dotenv from "dotenv";
+import * as fs from "fs";
 import ABI from "../abi.json";
 import { CONTRACT_ADDRESS, FUJI_RPC } from "../constants";
 
-// Load environment variables from .env file
 dotenv.config();
 
 async function test() {
-    // 1. Handle Private Key: Ensure 0x prefix and check if exists
+    // 1. Setup Human Owner Wallet
     let rawKey = process.env.USER_PRIVATE_KEY || "";
     if (!rawKey) {
-        console.error("❌ Error: USER_PRIVATE_KEY is not defined in .env");
+        console.error("❌ Error: USER_PRIVATE_KEY missing in .env");
         return;
     }
     const PRIVATE_KEY = rawKey.startsWith("0x") ? rawKey : `0x${rawKey}`;
 
-    // 2. Initialize Environment (Using values from constants.ts)
     const provider = new ethers.JsonRpcProvider(FUJI_RPC);
-    const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
-    const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, wallet);
+    const ownerWallet = new ethers.Wallet(PRIVATE_KEY, provider);
+    const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, ownerWallet);
 
     try {
-        console.log(`🚀 Testing with address: ${wallet.address}`);
+        console.log(`🚀 Human Owner: ${ownerWallet.address}`);
+
+        // 2. Generate a new random AI Agent identity
+        // This simulates a user clicking "Create New Agent" in your UI
+        const newAgent = ethers.Wallet.createRandom(); 
+        const agentData = {
+            agentAddress: newAgent.address,
+            agentPrivateKey: newAgent.privateKey, // AI needs this to sign requests later
+            ownerAddress: ownerWallet.address,
+            domain: "trademe.co.nz",
+            scope: "PURCHASE",
+            authorizedAt: new Date().toISOString()
+        };
+
+        console.log(`🤖 New Agent Identity: ${agentData.agentAddress}`);
+
+        // // 3. Register Agent on Avalanche Fuji (Phase 1)
+        // console.log("--- Step 1: Registering Agent ---");
+        // const regTx = await contract.registerAgent(agentData.agentAddress, { 
+        //     value: ethers.parseEther("0.01") 
+        // });
+        // await regTx.wait();
+        // console.log("✅ Registration confirmed on-chain");
+
+        // // 4. Grant Scopes to Agent (Phase 1)
+        // console.log(`--- Step 2: Granting [${agentData.scope}] permission ---`);
+        // const grantTx = await contract.grantPermission(
+        //     agentData.agentAddress, 
+        //     agentData.domain, 
+        //     agentData.scope
+        // );
+        // await grantTx.wait();
+        // console.log("✅ Permission granted on-chain");
+
+        // // 5. Persistence: Save credentials to a local JSON file
+        // // This replaces the "console log" and allows the Agent Skill to read its own identity
+        // const storagePath = "./authorized_agents.json";
+        // let agentsList = [];
         
-        // --- Step 1: Check Permission (Read Call) ---
-        console.log("1. Checking Agent permission...");
-        const agentAddr = "0x1234567890123456789012345678901234567890";
-        const domain = "trademe.co.nz";
-        const scope = "READ";
-
-        const hasPerm = await contract.hasPermission(agentAddr, domain, scope);
-        console.log(`✅ Query successful! Permission status:`, hasPerm);
-
-        // --- Step 2: Register Agent (Write Transaction) ---
-        // We check the owner first to avoid "AlreadyRegistered" error
-        const currentOwner = await contract.agentOwner(agentAddr);
+        // if (fs.existsSync(storagePath)) {
+        //     agentsList = JSON.parse(fs.readFileSync(storagePath, "utf8"));
+        // }
+        // agentsList.push(agentData);
         
-        if (currentOwner === ethers.ZeroAddress) {
-            console.log("2. Attempting to register Agent (paying 0.01 AVAX)...");
-            const regTx = await contract.registerAgent(agentAddr, { 
-                value: ethers.parseEther("0.01") 
-            });
-            console.log("⏳ Registration transaction sent, waiting for confirmation...");
-            await regTx.wait();
-            console.log("✅ Agent registered successfully!");
-        } else {
-            console.log("ℹ️ Agent is already registered. Owner:", currentOwner);
-        }
+        // fs.writeFileSync(storagePath, JSON.stringify(agentsList, null, 2));
+        // console.log(`📂 Agent credentials saved to: ${storagePath}`);
 
-        // --- Step 3: Grant Permission (Write Transaction) ---
-        console.log("3. Granting permission...");
-        const grantTx = await contract.grantPermission(agentAddr, domain, scope);
-        console.log("⏳ Grant transaction sent, waiting for confirmation...");
-        await grantTx.wait();
-        console.log("✅ Permission granted successfully!");
+        // // 6. Final Verification (Post-check)
+        // // Ensure the blockchain actually reflects the changes we made
+        // console.log("--- Step 3: Verifying Final Permission State ---");
+        // const isAuthorized = await contract.hasPermission(
+        //     agentData.agentAddress, 
+        //     agentData.domain, 
+        //     agentData.scope
+        // );
 
-        // --- Final Verification ---
-        const finalCheck = await contract.hasPermission(agentAddr, domain, scope);
-        console.log("🔗 Final on-chain status check:", finalCheck);
+        // if (isAuthorized) {
+        //     console.log("🎊 SUCCESS: Blockchain verification passed!");
+        //     console.log("The AI Agent is now ready to perform signed requests.");
+        // } else {
+        //     console.error("⚠️ WARNING: Verification failed. The state might still be syncing.");
+        // }
 
     } catch (error: any) {
-        // Specific error handling for UX
-        if (error.message.includes("insufficient funds")) {
-            console.error("❌ Failed: Your wallet does not have enough Fuji AVAX for gas/deposit.");
-        } else if (error.message.includes("AlreadyRegistered")) {
-            console.error("❌ Failed: This agent is already registered in the system.");
-        } else if (error.message.includes("NotAgentOwner")) {
-            console.error("❌ Failed: Only the agent owner can grant permissions.");
-        } else {
-            console.error("❌ Operation failed:", error.message);
-        }
+        console.error("❌ Transaction failed:", error.message);
     }
 }
 
