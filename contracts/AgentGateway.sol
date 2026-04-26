@@ -63,6 +63,12 @@ contract AgentGateway {
     /// @dev Flat bool used for O(1) domain registration check.
     mapping(bytes32 => bool) private _domainRegistered;
 
+    /// @dev Enumerable permissions list per domain — declared by the website operator at registration time.
+    mapping(bytes32 => string[]) private _domainPermissions;
+
+    /// @dev Plain string list of every registered domain — enables UI enumeration (POC only).
+    string[] private _allDomains;
+
     // ── Owner → Agent Enumeration ─────────────────────────────────────────────
 
     /// @dev Enumerable agent list per owner — used by getAgentsForOwner().
@@ -90,6 +96,7 @@ contract AgentGateway {
     error RefundFailed();
     error LimitExceeded();
     error DomainAlreadyRegistered();
+    error EmptyPermissionsArray();
 
     // ── Modifiers ─────────────────────────────────────────────────────────────
 
@@ -175,13 +182,20 @@ contract AgentGateway {
     /**
      * @notice Register a website domain as an Agent-Gateway-compatible endpoint.
      *         Called by the website operator (or their deploy script) once per domain.
-     * @param domain The domain string (e.g. "bookme.com").
+     * @param domain      The domain string (e.g. "bookme.com").
+     * @param permissions Non-empty list of permission scopes this domain supports
+     *                    (e.g. ["READ", "CART", "PURCHASE"]). At least one is required.
      */
-    function registerDomain(string calldata domain) external {
+    function registerDomain(string calldata domain, string[] calldata permissions) external {
+        if (permissions.length == 0) revert EmptyPermissionsArray();
         bytes32 key = keccak256(bytes(domain));
         if (_domainRegistered[key]) revert DomainAlreadyRegistered();
         _domainRegistered[key] = true;
         domainOwner[key] = msg.sender;
+        for (uint256 i = 0; i < permissions.length; i++) {
+            _domainPermissions[key].push(permissions[i]);
+        }
+        _allDomains.push(domain);
         emit DomainRegistered(domain, msg.sender);
     }
 
@@ -191,6 +205,23 @@ contract AgentGateway {
      */
     function isDomainRegistered(string calldata domain) external view returns (bool) {
         return _domainRegistered[keccak256(bytes(domain))];
+    }
+
+    /**
+     * @notice Return the permission scopes declared by the domain operator at registration time.
+     *         Used by the Grant Permission UI to show only scopes the domain actually supports.
+     * @return Array of scope strings (empty if domain is not registered).
+     */
+    function getDomainPermissions(string calldata domain) external view returns (string[] memory) {
+        return _domainPermissions[keccak256(bytes(domain))];
+    }
+
+    /**
+     * @notice Return all registered domain strings.
+     *         Intended for UI dashboards. Not gas-efficient for large lists — POC only.
+     */
+    function getRegisteredDomains() external view returns (string[] memory) {
+        return _allDomains;
     }
 
     // ── Permission Management ─────────────────────────────────────────────────
