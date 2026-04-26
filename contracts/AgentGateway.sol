@@ -55,12 +55,29 @@ contract AgentGateway {
     /// @dev Tracks whether a domain already exists in _agentDomains to avoid duplicates.
     mapping(address => mapping(string => bool)) private _domainExists;
 
+    // ── Domain Registry ───────────────────────────────────────────────────────
+
+    /// @notice Maps keccak256(domain) → address of the website operator who registered it.
+    mapping(bytes32 => address) public domainOwner;
+
+    /// @dev Flat bool used for O(1) domain registration check.
+    mapping(bytes32 => bool) private _domainRegistered;
+
+    // ── Owner → Agent Enumeration ─────────────────────────────────────────────
+
+    /// @dev Enumerable agent list per owner — used by getAgentsForOwner().
+    mapping(address => address[]) private _ownerAgents;
+
+    /// @dev 1-based index into _ownerAgents[owner]; 0 means absent.
+    mapping(address => mapping(address => uint256)) private _ownerAgentIndex;
+
     // ── Events ────────────────────────────────────────────────────────────────
 
     event AgentRegistered(address indexed agent, address indexed owner, uint256 deposit);
     event AgentDeregistered(address indexed agent, address indexed owner, uint256 refund);
     event PermissionGranted(address indexed agent, string domain, string scope);
     event PermissionRevoked(address indexed agent, string domain, string scope);
+    event DomainRegistered(string domain, address indexed owner);
 
     // ── Errors ────────────────────────────────────────────────────────────────
 
@@ -72,6 +89,7 @@ contract AgentGateway {
     error EmptyScopeArray();
     error RefundFailed();
     error LimitExceeded();
+    error DomainAlreadyRegistered();
 
     // ── Modifiers ─────────────────────────────────────────────────────────────
 
@@ -95,6 +113,9 @@ contract AgentGateway {
         agentOwner[agent] = msg.sender;
         agentDeposit[agent] = msg.value;
         registeredAt[agent] = block.timestamp;
+
+        _ownerAgents[msg.sender].push(agent);
+        _ownerAgentIndex[msg.sender][agent] = _ownerAgents[msg.sender].length;
 
         emit AgentRegistered(agent, msg.sender, msg.value);
     }
@@ -123,6 +144,18 @@ contract AgentGateway {
         }
         delete _agentDomains[agent];
 
+        // Remove agent from owner's enumerable list (swap-and-pop)
+        address[] storage ownerList = _ownerAgents[owner];
+        uint256 idx = _ownerAgentIndex[owner][agent] - 1;
+        uint256 lastIdx = ownerList.length - 1;
+        if (idx != lastIdx) {
+            address last = ownerList[lastIdx];
+            ownerList[idx] = last;
+            _ownerAgentIndex[owner][last] = idx + 1;
+        }
+        ownerList.pop();
+        _ownerAgentIndex[owner][agent] = 0;
+
         // Clear registration state
         delete agentOwner[agent];
         delete agentDeposit[agent];
@@ -135,6 +168,29 @@ contract AgentGateway {
             (bool ok, ) = owner.call{value: refund}("");
             if (!ok) revert RefundFailed();
         }
+    }
+
+    // ── Domain Registry ───────────────────────────────────────────────────────
+
+    /**
+     * @notice Register a website domain as an Agent-Gateway-compatible endpoint.
+     *         Called by the website operator (or their deploy script) once per domain.
+     * @param domain The domain string (e.g. "bookme.com").
+     */
+    function registerDomain(string calldata domain) external {
+        bytes32 key = keccak256(bytes(domain));
+        if (_domainRegistered[key]) revert DomainAlreadyRegistered();
+        _domainRegistered[key] = true;
+        domainOwner[key] = msg.sender;
+        emit DomainRegistered(domain, msg.sender);
+    }
+
+    /**
+     * @notice Check whether a domain has opted into the Agent-Gateway Protocol.
+     * @return True if the domain has been registered by its operator.
+     */
+    function isDomainRegistered(string calldata domain) external view returns (bool) {
+        return _domainRegistered[keccak256(bytes(domain))];
     }
 
     // ── Permission Management ─────────────────────────────────────────────────
@@ -226,6 +282,14 @@ contract AgentGateway {
      */
     function getDomainsForAgent(address agent) external view returns (string[] memory) {
         return _agentDomains[agent];
+    }
+
+    /**
+     * @notice Return all active agents registered by a given owner.
+     *         Useful for UI dropdowns — avoids event-log queries.
+     */
+    function getAgentsForOwner(address owner) external view returns (address[] memory) {
+        return _ownerAgents[owner];
     }
 
     // ── Internal Helpers ──────────────────────────────────────────────────────
